@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garden Weather Display</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Georgia', 'Times New Roman', serif;
+            background: linear-gradient(135deg, 
+                #2D5016 0%,     /* Deep forest green */
+                #4A7C59 25%,    /* Forest green */
+                #6B8E23 50%,    /* Olive green */
+                #8FBC8F 75%,    /* Dark sea green */
+                #90EE90 100%    /* Light green */
+            );
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Nature pattern overlay */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 2px, transparent 2px),
+                radial-gradient(circle at 80% 80%, rgba(255,255,255,0.1) 1px, transparent 1px),
+                radial-gradient(circle at 40% 40%, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 50px 50px, 30px 30px, 70px 70px;
+            pointer-events: none;
+        }
+
+        .weather-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 40px;
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.3),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            border: 3px solid #4A7C59;
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            backdrop-filter: blur(10px);
+        }
+
+        .weather-container::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #8FBC8F, #6B8E23, #4A7C59, #2D5016);
+            border-radius: 27px;
+            z-index: -1;
+        }
+
+        .garden-title {
+            color: #2D5016;
+            font-size: 2.8rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+
+        .weather-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .weather-item {
+            background: linear-gradient(145deg, #f0f8f0, #e8f5e8);
+            border-radius: 20px;
+            padding: 25px 15px;
+            border: 2px solid #6B8E23;
+            box-shadow: 
+                0 8px 25px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+
+        .weather-label {
+            color: #4A7C59;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .weather-value {
+            color: #2D5016;
+            font-size: 2.2rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            line-height: 1.2;
+        }
+
+        .temperature {
+            font-size: 3rem;
+        }
+
+        .condition-section {
+            background: linear-gradient(145deg, #f8fff8, #f0f8f0);
+            border-radius: 20px;
+            padding: 25px;
+            border: 2px solid #8FBC8F;
+            box-shadow: 
+                0 8px 25px rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+        }
+
+        .condition-label {
+            color: #4A7C59;
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+        }
+
+        .condition-value {
+            color: #2D5016;
+            font-size: 1.8rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-transform: capitalize;
+        }
+
+        .weather-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 15px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            border: 2px solid #6B8E23;
+        }
+
+        .weather-icon img {
+            width: 50px;
+            height: 50px;
+            filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
+        }
+
+        /* Decorative elements */
+        .leaf-decoration {
+            position: absolute;
+            color: #6B8E23;
+            font-size: 1.5rem;
+            opacity: 0.6;
+        }
+
+        .leaf-1 { top: 20px; left: 20px; transform: rotate(-15deg); }
+        .leaf-2 { top: 20px; right: 20px; transform: rotate(15deg); }
+        .leaf-3 { bottom: 20px; left: 20px; transform: rotate(45deg); }
+        .leaf-4 { bottom: 20px; right: 20px; transform: rotate(-45deg); }
+
+        /* High contrast mode for bright sunlight */
+        @media (prefers-contrast: high) {
+            .weather-container {
+                background: rgba(255, 255, 255, 1);
+                border: 4px solid #2D5016;
+            }
+            
+            .weather-value, .condition-value {
+                color: #000000;
+                text-shadow: none;
+                font-weight: 900;
+            }
+            
+            .weather-label, .condition-label {
+                color: #2D5016;
+                font-weight: 900;
+            }
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .weather-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .garden-title {
+                font-size: 2.2rem;
+            }
+            
+            .weather-value {
+                font-size: 1.8rem;
+            }
+            
+            .temperature {
+                font-size: 2.4rem;
+            }
+        }
+
+        /* Auto-refresh indicator */
+        .refresh-indicator {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            width: 12px;
+            height: 12px;
+            background: #4A7C59;
+            border-radius: 50%;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="weather-container">
+        <div class="refresh-indicator"></div>
+        
+        <!-- Decorative leaf elements -->
+        <div class="leaf-decoration leaf-1">🍃</div>
+        <div class="leaf-decoration leaf-2">🍃</div>
+        <div class="leaf-decoration leaf-3">🍃</div>
+        <div class="leaf-decoration leaf-4">🍃</div>
+        
+        <h1 class="garden-title">🌻 Pollinator Garden 🦋</h1>
+        
+        <div class="weather-grid">
+            <div class="weather-item">
+                <div class="weather-label">Temperature</div>
+                <div class="weather-value temperature">{{ temp }}</div>
+            </div>
+            
+            <div class="weather-item">
+                <div class="weather-label">Humidity</div>
+                <div class="weather-value">{{ hum }}</div>
+            </div>
+            
+        </div>
+        
+        <div class="condition-section">
+            {% if img_url %}
+            <div class="weather-icon">
+                <img src="{{ img_url }}" alt="Weather condition">
+            </div>
+            {% endif %}
+            <div class="condition-label">Current Conditions</div>
+            <div class="condition-value">{{ cond }}</div>
+        </div>
+    </div>
+
+    <script>
+        // Auto-refresh every 5 minutes
+        setTimeout(function() {
+            location.reload();
+        }, 300000);
+        
+        // Visual feedback for refresh
+        const indicator = document.querySelector('.refresh-indicator');
+        setInterval(function() {
+            indicator.style.opacity = indicator.style.opacity === '0.3' ? '0.7' : '0.3';
+        }, 2000);
+    </script>
+</body>
+</html>

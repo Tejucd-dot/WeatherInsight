@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dublin Weather Display</title>
+  <meta http-equiv="refresh" content="300"> <!-- Refresh every 5 mins -->
+  <link rel="stylesheet" href="C:\Users\tejas\OneDrive\Desktop\project_1\style.css">
+</head>
+<body>
+  <div class="weather-container">
+    <h1>🌤 Dublin Live Weather</h1>
+    
+    {% if img_url %}
+      <img class="weather-icon" src="{{ img_url }}" alt="Weather Icon">
+    {% endif %}
+
+    <div class="weather-data">
+      <div class="metric">
+        <span class="label">🌡 Temperature:</span>
+        <span class="value">{{ temp }}</span>
+      </div>
+      <div class="metric">
+        <span class="label">⛅ Condition:</span>
+        <span class="value">{{ cond }}</span>
+      </div>
+      <div class="metric">
+        <span class="label">💧 Humidity:</span>
+        <span class="value">{{ hum }}</span>
+      </div>
+    </div>
+
+    <p class="refresh-note">Auto-refreshes every 5 minutes</p>
+  </div>
+</body>
+</html>

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garden Weather Display</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #00ff00;
+            font-family: 'Orbitron', monospace;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .screen {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(45deg, #000 0%, #111 50%, #000 100%);
+            border: 3px solid #00ff00;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.03) 2px,
+                    rgba(0, 255, 0, 0.03) 4px
+                ),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 2px,
+                    rgba(0, 255, 0, 0.03) 2px,
+                    rgba(0, 255, 0, 0.03) 4px
+                );
+            pointer-events: none;
+        }
+        
+        .status-bar {
+            height: 80px;
+            background: rgba(0, 255, 0, 0.1);
+            border-bottom: 2px solid #00ff00;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 30px;
+            font-size: 24px;
+            font-weight: 700;
+            text-shadow: 0 0 10px #00ff00;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        
+        .status-bar.visible {
+            opacity: 1;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .icon {
+            font-size: 28px;
+            filter: drop-shadow(0 0 8px #00ff00);
+        }
+        
+        .weather-icon {
+            width: 40px;
+            height: 40px;
+            filter: brightness(0) saturate(100%) invert(50%) sepia(96%) saturate(4151%) hue-rotate(75deg) brightness(118%) contrast(119%);
+        }
+        
+        .main-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+        
+        .main-display.hidden {
+            opacity: 0;
+        }
+        
+        .temperature {
+            font-size: 120px;
+            font-weight: 900;
+            text-shadow: 0 0 30px #00ff00, 0 0 60px #00ff00;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        
+        .condition {
+            font-size: 48px;
+            font-weight: 700;
+            text-shadow: 0 0 20px #00ff00;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .humidity-display {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 36px;
+            font-weight: 700;
+            text-shadow: 0 0 15px #00ff00;
+        }
+        
+        .quote-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            text-align: center;
+        }
+        
+        .quote-display.visible {
+            opacity: 1;
+        }
+        
+        .quote-text {
+            font-size: 42px;
+            font-weight: 700;
+            text-shadow: 0 0 20px #00ff00;
+            line-height: 1.4;
+            max-width: 90%;
+            animation: textGlow 3s ease-in-out infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        @keyframes textGlow {
+            0% { text-shadow: 0 0 20px #00ff00; }
+            100% { text-shadow: 0 0 30px #00ff00, 0 0 40px #00ff00; }
+        }
+        
+        .scanline {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #00ff00, transparent);
+            animation: scan 3s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(100vh); opacity: 0; }
+        }
+        
+        /* High contrast mode for bright sunlight */
+        @media (prefers-contrast: high) {
+            body {
+                background: #000;
+                color: #fff;
+            }
+            .screen {
+                border-color: #fff;
+                background: #000;
+            }
+            .status-bar {
+                background: rgba(255, 255, 255, 0.1);
+                border-bottom-color: #fff;
+            }
+            .temperature, .condition, .humidity-display, .quote-text {
+                color: #fff;
+                text-shadow: 0 0 10px #fff;
+            }
+        }
+        
+        /* Responsive design for different screen sizes */
+        @media (max-width: 768px) {
+            .temperature { font-size: 80px; }
+            .condition { font-size: 32px; }
+            .humidity-display { font-size: 28px; }
+            .quote-text { font-size: 28px; }
+            .status-bar { font-size: 18px; }
+        }
+        
+        @media (max-height: 600px) {
+            .temperature { font-size: 60px; }
+            .condition { font-size: 24px; }
+            .humidity-display { font-size: 20px; }
+            .quote-text { font-size: 20px; }
+            .status-bar { height: 60px; font-size: 16px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="screen">
+        <div class="scanline"></div>
+        
+        <div class="status-bar" id="statusBar">
+            <div class="status-item">
+                <span class="icon">🌡️</span>
+                <span id="statusTemp">{{ temp }}</span>
+            </div>
+            <div class="status-item">
+                <img src="{{ img_url }}" alt="Weather" class="weather-icon" id="statusWeatherIcon">
+            </div>
+            <div class="status-item">
+                <span class="icon">💧</span>
+                <span id="statusHum">{{ hum }}</span>
+            </div>
+        </div>
+        
+        <div class="main-display" id="mainDisplay">
+            <div class="temperature">{{ temp }}</div>
+            <div class="condition">{{ cond }}</div>
+            <div class="humidity-display">
+                <span class="icon">💧</span>
+                <span>{{ hum }}</span>
+            </div>
+        </div>
+        
+        <div class="quote-display" id="quoteDisplay">
+            <div class="quote-text" id="quoteText"></div>
+        </div>
+    </div>
+
+    <script>
+        // List of 10 quotes for the pollinator garden
+        const quotes = [
+            "Bees pollinate 1 in every 3 bites of food you eat. Thank a bee today!",
+            "A single tree can absorb 22kg of CO2 every year.",
+            "Healthy gardens cool cities! Nature’s air conditioning.",
+            "Native plants support more insects and birds than exotic ones",
+            "Plant something today! The earth will thank you tomorrow.",
+            "Don’t mow! Let it grow! Even a little wild patch helps biodiversity.",
+            "Weeds are often wildflowers in disguise",
+            "Photosynthesis: turning sunlight into snacks!",
+            "Every flower is a protest against pollution",
+            "Caring for the earth starts in your garden",
+            "A garden is hope made visible",
+            "Plant roots now so future generations can bloom!",
+            "Got scraps? Compost, don’t trash!",
+        ];
+
+        let currentQuoteIndex = 0;
+        let isShowingQuote = false;
+
+        function showRandomQuote() {
+            if (isShowingQuote) return;
+            
+            isShowingQuote = true;
+            
+            // Get random quote
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            const quote = quotes[randomIndex];
+            
+            // Update quote text
+            document.getElementById('quoteText').textContent = quote;
+            
+            // Hide main display and show quote with status bar
+            document.getElementById('mainDisplay').classList.add('hidden');
+            document.getElementById('statusBar').classList.add('visible');
+            document.getElementById('quoteDisplay').classList.add('visible');
+            
+            // After 20 seconds, return to main display
+            setTimeout(() => {
+                document.getElementById('quoteDisplay').classList.remove('visible');
+                document.getElementById('statusBar').classList.remove('visible');
+                document.getElementById('mainDisplay').classList.remove('hidden');
+                isShowingQuote = false;
+            }, 20000); // 20 seconds
+        }
+
+        // Show quote every 10 seconds
+        setInterval(showRandomQuote, 10000);
+
+        // Optional: Add weather data refresh functionality
+        function refreshWeatherData() {
+            // This would typically fetch new data from your Python backend
+            // For now, we'll just trigger a page reload every 5 minutes
+            setTimeout(() => {
+                window.location.reload();
+            }, 300000); // 5 minutes
+        }
+
+        // Start weather refresh cycle
+        refreshWeatherData();
+
+        // Add some dynamic effects
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add subtle breathing effect to temperature
+            const temp = document.querySelector('.temperature');
+            if (temp) {
+                setInterval(() => {
+                    temp.style.transform = 'scale(1.02)';
+                    setTimeout(() => {
+                        temp.style.transform = 'scale(1)';
+                    }, 1000);
+                }, 4000);
+            }
+        });
+    </script>
+</body>
+</html>

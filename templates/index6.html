@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garden Weather Display</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #1a1a1a;
+            color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .phone-container {
+            width: 380px;
+            height: 820px;
+            background: linear-gradient(135deg, #2a2a2a 0%, #1e1e1e 100%);
+            border-radius: 45px;
+            padding: 15px;
+            position: relative;
+            box-shadow: 
+                0 0 30px rgba(0, 0, 0, 0.8),
+                inset 0 0 20px rgba(255, 255, 255, 0.05);
+        }
+        
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            border-radius: 35px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* LED Grid Effect */
+        .screen::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 3px,
+                    rgba(255, 255, 255, 0.02) 3px,
+                    rgba(255, 255, 255, 0.02) 6px
+                ),
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 3px,
+                    rgba(255, 255, 255, 0.02) 3px,
+                    rgba(255, 255, 255, 0.02) 6px
+                );
+            pointer-events: none;
+        }
+        
+        /* Status Bar (for quotes mode) */
+        .status-bar {
+            height: 70px;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 25px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            opacity: 0;
+            transform: translateY(-100%);
+            transition: all 0.5s ease;
+        }
+        
+        .status-bar.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .status-icons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 16px;
+        }
+        
+        .signal-bars, .wifi-icon, .battery {
+            color: #ffffff;
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+        }
+        
+        .status-weather {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            filter: brightness(0) saturate(100%) invert(100%);
+        }
+        
+        /* Main Weather Display */
+        .main-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 30px;
+            opacity: 1;
+            transform: translateY(0);
+            transition: all 0.5s ease;
+        }
+        
+        .main-display.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        
+        .weather-card {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            border-radius: 25px;
+            padding: 25px;
+            margin-bottom: 35px;
+            box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 120px;
+            height: 120px;
+            justify-content: center;
+        }
+        
+        .weather-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+        }
+        
+        .temperature {
+            font-size: 48px;
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+        }
+        
+        .temp-label {
+            font-size: 16px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .humidity-card {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            border-radius: 25px;
+            padding: 25px;
+            margin-bottom: 35px;
+            box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 120px;
+            height: 120px;
+            justify-content: center;
+        }
+        
+        .humidity-icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.5));
+        }
+        
+        .humidity {
+            font-size: 48px;
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+            margin-bottom: 8px;
+        }
+        
+        .humidity-label {
+            font-size: 16px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .weather-condition-card {
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            border-radius: 25px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 120px;
+            height: 120px;
+            justify-content: center;
+        }
+        
+        .condition-icon {
+            width: 36px;
+            height: 36px;
+            margin-bottom: 8px;
+            filter: brightness(0) saturate(100%) invert(100%);
+        }
+        
+        .weather-text {
+            font-size: 14px;
+            font-weight: 600;
+            color: #ffffff;
+            text-align: center;
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+        }
+        
+        .weather-label {
+            font-size: 16px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 8px;
+        }
+        
+        /* Quote Display */
+        .quote-display {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 80px 40px 40px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.5s ease;
+            position: relative;
+        }
+        
+        .quote-display.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .quote-card {
+            background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            border-radius: 30px;
+            padding: 40px 30px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+            position: relative;
+            width: 100%;
+            max-width: 300px;
+        }
+        
+        .quote-icon {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: white;
+        }
+        
+        .quote-text {
+            font-size: 20px;
+            font-weight: 600;
+            color: #ffffff;
+            text-align: center;
+            line-height: 1.5;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { 
+                transform: scale(1);
+                box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
+            }
+            50% { 
+                transform: scale(1.02);
+                box-shadow: 0 15px 35px rgba(74, 144, 226, 0.4);
+            }
+        }
+        
+        .weather-card, .humidity-card, .weather-condition-card {
+            animation: pulse 3s ease-in-out infinite;
+            animation-delay: 0s;
+        }
+        
+        .humidity-card {
+            animation-delay: 1s;
+        }
+        
+        .weather-condition-card {
+            animation-delay: 2s;
+        }
+        
+        @keyframes textGlow {
+            0%, 100% { text-shadow: 0 0 10px rgba(255, 255, 255, 0.2); }
+            50% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.4); }
+        }
+        
+        .quote-text {
+            animation: textGlow 2s ease-in-out infinite;
+        }
+        
+        /* High visibility enhancements */
+        @media (prefers-contrast: high) {
+            .screen {
+                background: #000;
+            }
+            .weather-card, .humidity-card, .weather-condition-card {
+                background: #fff;
+                color: #000;
+            }
+            .temperature, .humidity {
+                color: #000;
+                text-shadow: none;
+            }
+        }
+        
+        /* Responsive adjustments for different LED screen sizes */
+        @media (max-height: 900px) {
+            .phone-container {
+                height: 90vh;
+                width: 340px;
+            }
+            .temperature, .humidity {
+                font-size: 42px;
+            }
+            .quote-text {
+                font-size: 18px;
+            }
+        }
+        
+        @media (max-height: 700px) {
+            .phone-container {
+                height: 95vh;
+                width: 300px;
+            }
+            .weather-card, .humidity-card, .weather-condition-card {
+                width: 100px;
+                height: 100px;
+                padding: 20px;
+            }
+            .temperature, .humidity {
+                font-size: 36px;
+            }
+            .quote-text {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="phone-container">
+        <div class="screen">
+            <!-- Status Bar (shown during quotes) -->
+            <div class="status-bar" id="statusBar">
+                <div class="status-icons">
+                    <div class="signal-bars">📶</div>
+                    <div class="wifi-icon">📶</div>
+                    <div class="battery">🔋</div>
+                </div>
+                <div class="status-weather">
+                    <div class="status-item">
+                        <span class="weather-icon">🌡️</span>
+                        <span id="statusTemp">{{ temp }}°C</span>
+                    </div>
+                    <img src="{{ img_url }}" alt="Weather" class="status-icon" id="statusWeatherIcon">
+                    <div class="status-item">
+                        <span class="weather-icon">💧</span>
+                        <span id="statusHum">{{ hum }}%</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Weather Display (A1 Style) -->
+            <div class="main-display" id="mainDisplay">
+                <div class="weather-card">
+                    <div class="weather-icon">🌡️</div>
+                    <div class="temperature">{{ temp }}°C</div>
+                    <div class="temp-label">Temperature</div>
+                </div>
+                
+                <div class="humidity-card">
+                    <div class="humidity-icon">💧</div>
+                    <div class="humidity">{{ hum }}%</div>
+                    <div class="humidity-label">Humidity</div>
+                </div>
+                
+                <div class="weather-condition-card">
+                    <img src="{{ img_url }}" alt="Weather" class="condition-icon">
+                    <div class="weather-text">{{ cond }}</div>
+                    <div class="weather-label">Weather</div>
+                </div>
+            </div>
+            
+            <!-- Quote Display (B1 Style) -->
+            <div class="quote-display" id="quoteDisplay">
+                <div class="quote-card">
+                    <div class="quote-icon">❓</div>
+                    <div class="quote-text" id="quoteText"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // List of 10 quotes for the pollinator garden
+        const quotes = [
+            "In every walk with nature, one receives far more than they seek.",
+            "The hum of bees is the voice of the garden.",
+            "Where flowers bloom, so does hope.",
+            "Nature does not hurry, yet everything is accomplished.",
+            "Every flower must grow through dirt to reach the light.",
+            "The earth laughs in flowers.",
+            "Be like a flower and turn your face to the sun.",
+            "In the garden of life, plant kindness and harvest love.",
+            "Flowers are the music of the ground from earth's lips spoken without sound.",
+            "A garden is a friend you can visit anytime."
+        ];
+
+        let isShowingQuote = false;
+
+        function showRandomQuote() {
+            if (isShowingQuote) return;
+            
+            isShowingQuote = true;
+            
+            // Get random quote
+            const randomIndex = Math.floor(Math.random() * quotes.length);
+            const quote = quotes[randomIndex];
+            
+            // Update quote text
+            document.getElementById('quoteText').textContent = quote;
+            
+            // Show transition: Main -> Quote with Status Bar (B1 style)
+            document.getElementById('mainDisplay').classList.add('hidden');
+            
+            setTimeout(() => {
+                document.getElementById('statusBar').classList.add('visible');
+                document.getElementById('quoteDisplay').classList.add('visible');
+            }, 250);
+            
+            // After 20 seconds, return to main display (A1 style)
+            setTimeout(() => {
+                document.getElementById('quoteDisplay').classList.remove('visible');
+                document.getElementById('statusBar').classList.remove('visible');
+                
+                setTimeout(() => {
+                    document.getElementById('mainDisplay').classList.remove('hidden');
+                    isShowingQuote = false;
+                }, 250);
+            }, 20000); // 20 seconds
+        }
+
+        // Show quote every 10 seconds
+        setInterval(showRandomQuote, 10000);
+
+        // Weather data refresh every 5 minutes
+        function refreshWeatherData() {
+            setTimeout(() => {
+                window.location.reload();
+            }, 300000); // 5 minutes
+        }
+
+        refreshWeatherData();
+
+        // Enhanced LED effects
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add dynamic brightness based on time (simulate outdoor conditions)
+            const hour = new Date().getHours();
+            const brightness = hour >= 6 && hour <= 18 ? 1 : 0.9;
+            document.body.style.filter = `brightness(${brightness})`;
+            
+            // Add subtle screen flicker effect for LED authenticity
+            setInterval(() => {
+                const screen = document.querySelector('.screen');
+                screen.style.opacity = '0.98';
+                setTimeout(() => {
+                    screen.style.opacity = '1';
+                }, 50);
+            }, 8000);
+        });
+    </script>
+</body>
+</html>
